@@ -10,6 +10,9 @@ Send bytes to serial port from command line.
    
 *	serialwr -h com1 "0102 0304"   
 	Send `0x02 0x01 0x04 0x03` to com1 with default baudrate.
+   
+*	serialwr -h --be com1 "0102 0304"   
+	Send `0x01 0x02 0x03 0x04` to com1 with default baudrate.   
 
 *	serialwr -b -f abc.txt com1  
 	contents of abc.txt (on Windows):   

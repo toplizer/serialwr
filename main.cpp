@@ -22,40 +22,40 @@ unsigned char hex2n(char hex)
 	return 0;
 }
 
-unsigned char *put(unsigned char *ptr, unsigned int data, int c, unsigned char *end) {
+unsigned char *put(unsigned char *ptr, unsigned int data, int c, unsigned char *end, bool le) {
 	if (c == 1 || c == 2) {
 		if( ptr == end ) return NULL;
 		*ptr++ = data & 0xFF;
 	}
 	else if (c == 3 || c == 4) {
 		if( ptr == end ) return NULL;
-		*ptr++ = data & 0xFF;
+		*ptr++ = le?(data & 0xFF):((data>>8)&0xFF);
 		if( ptr == end ) return NULL;
-		*ptr++ = (data >> 8) & 0xFF;
+		*ptr++ = le?((data >> 8) & 0xFF):(data & 0xFF);
 	}
 	else if (c == 5 || c == 6) {
 		if( ptr == end ) return NULL;
-		*ptr++ = data & 0xFF;
+		*ptr++ = le ? (data & 0xFF) : ((data >> 16) & 0xFF);
 		if( ptr == end ) return NULL;
 		*ptr++ = (data >> 8) & 0xFF;
 		if( ptr == end ) return NULL;
-		*ptr++ = (data >> 16) & 0xFF;
+		*ptr++ = le ? ((data  >> 16) & 0xFF) : (data & 0xFF);
 	}
 	else if (c == 7 || c == 8) {
 		if( ptr == end ) return NULL;
-		*ptr++ = data & 0xFF;
+		*ptr++ = le ? (data & 0xFF) : ((data >> 24) & 0xFF);
 		if( ptr == end ) return NULL;
-		*ptr++ = (data >> 8) & 0xFF;
+		*ptr++ = le ? ((data >> 8) & 0xFF) : ((data >> 16) & 0xFF);
 		if( ptr == end ) return NULL;
-		*ptr++ = (data >> 16) & 0xFF;
+		*ptr++ = le ? ((data >> 16) & 0xFF) : ((data >> 8) & 0xFF);
 		if( ptr == end ) return NULL;
-		*ptr++ = (data >> 24) & 0xFF;
+		*ptr++ = le ? ((data >> 24) & 0xFF) : (data & 0xFF);
 	}
 	return ptr;
 }
 
 
-unsigned int hex2data(const char *hex, unsigned char *buf, unsigned int len)
+unsigned int hex2data(const char *hex, unsigned char *buf, unsigned int len, bool le)
 {
 	int c = 0;
 	unsigned int data = 0;
@@ -67,7 +67,7 @@ unsigned int hex2data(const char *hex, unsigned char *buf, unsigned int len)
 				hex++;
 				continue;
 			}
-			ptr = put(ptr, data, c, buf + len);
+			ptr = put(ptr, data, c, buf + len, le);
 			if( !ptr ) return 0;
 			data = 0;
 			c = 0;
@@ -82,7 +82,7 @@ unsigned int hex2data(const char *hex, unsigned char *buf, unsigned int len)
 		c++;
 
 		if (c == 8) {
-			ptr = put(ptr, data, 8, buf + len);
+			ptr = put(ptr, data, 8, buf + len, le);
 			if( !ptr ) return 0;
 			data = 0;
 			c = 0;
@@ -91,7 +91,7 @@ unsigned int hex2data(const char *hex, unsigned char *buf, unsigned int len)
 		hex++;
 	}
 	if (c) {
-		ptr = put(ptr, data, c, buf + len);
+		ptr = put(ptr, data, c, buf + len, le);
 		if( !ptr ) return 0;
 	}
 
@@ -149,6 +149,10 @@ int main(int argc, char **argv)
 	args::Positional<std::string> data(dataSourceGroup, "Data", "input data");
 	args::ValueFlag<std::string> file(dataSourceGroup, "File", "data file path", { 'f',"file" });
 
+	args::Group endianGroup(parser, "Endian", args::Group::Validators::AtMostOne);
+	args::Flag littleEndian(endianGroup, "le", "little endian", { "le" });
+	args::Flag bigEndian(endianGroup, "be", "big endian", { "be" });
+
 	try {
 		parser.ParseArgs(args);
 
@@ -164,7 +168,7 @@ int main(int argc, char **argv)
 			}
 			else if (args::get(hexType)) {
 				unsigned char buf[1024];
-				unsigned int n = hex2data(args::get(data).c_str(), buf, sizeof(buf));
+				unsigned int n = hex2data(args::get(data).c_str(), buf, sizeof(buf), (args::get(littleEndian) || !args::get(bigEndian)));
 				if (!n) {
 					std::cerr << "out of memory" << std::endl;
 					return -1;
@@ -194,7 +198,6 @@ int main(int argc, char **argv)
 				char *buf = new char[1024];
 				while (pbuf->sgetc() != std::char_traits<char>::eof()) {
 					std::streamsize n = pbuf->in_avail();
-					std::cout << "n=" << n << std::endl;
 					if( n > size ){
 						delete buf;
 						buf = new char[(size_t)n];
@@ -210,7 +213,7 @@ int main(int argc, char **argv)
 
 				while (!f.eof()) {
 					f.getline(line, 1024, '\n');
-					unsigned int n = hex2data(line, buf, sizeof(buf));
+					unsigned int n = hex2data(line, buf, sizeof(buf), (args::get(littleEndian) || !args::get(bigEndian)));
 					if( !n ){
 						std::cerr << "out of memory" <<std::endl;
 						return -1;
