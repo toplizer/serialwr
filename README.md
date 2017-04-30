@@ -1,6 +1,25 @@
 # serialwr
 Send bytes to serial port from command line.
 
+### Dependencies
+*	[cmake](http://cmake.org)
+*	[juliencombattelli/Serial](http://github.com/juliencombattelli/Serial) [included by submodule]
+*	[wjwwood/args](http://github.com/wjwwood/args) [included by submodule]
+  
+  
+### Build Command
+>	mkdir build  
+>	cd build  
+>	cmake ..  
+>	cmake --build . --config Release
+  
+  
+### Platform
+*	Passed with Visual Studio 2015
+  
+  
+### Usage   
+
 *	serialwr com1 "hello!"   
 	Send `hello!` to com1 with default baudrate(9600).   
 	Same as `serialwr --br 9600 -p N -s 1 --fc none -t com1 "hello!"`.
