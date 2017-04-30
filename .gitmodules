@@ -1,0 +1,6 @@
+[submodule "args"]
+	path = args
+	url = https://github.com/Taywee/args.git
+[submodule "Serial"]
+	path = Serial
+	url = https://github.com/juliencombattelli/Serial.git
