@@ -1,12 +1,12 @@
-project(serailwr)
+project(serialwr)
 
 cmake_minimum_required(VERSION 3.0)
 
 add_custom_target(BuildSerial
-	COMMAND cmake .
+	COMMAND cmake ../../Serial
 	COMMAND cmake --build . --config Debug
 	COMMAND cmake --build . --config Release
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Serial
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/build/Serial
 	)
 
 include_directories(
@@ -15,7 +15,7 @@ include_directories(
 )
 
 link_directories(
-	./Serial
+	./build/Serial
 )
 
 add_executable(${PROJECT_NAME} main.cpp)
